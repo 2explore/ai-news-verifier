@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI新闻验证系统</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: '微软雅黑', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .input-panel {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s;
+        }
+
+        #newsContent {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 2px solid #eee;
+            border-radius: 0.8rem;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            margin: 1rem 0;
+            transition: border-color 0.3s;
+        }
+
+        #urlWarning {
+            color: var(--danger);
+            display: none;
+            margin: 0.5rem 0;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: block;
+            width: 200px;
+            margin: 1rem auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 其余样式保持不变 */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-panel">
+            <h1 style="text-align: center; color: var(--primary);">AI新闻验证系统</h1>
+            <textarea 
+                id="newsContent"
+                placeholder="请输入需要验证的新闻内容或链接（支持直接输入URL）..."
+            ></textarea>
+            <div id="urlWarning"></div>
+            <button onclick="startAnalysis()">开始验证</button>
+        </div>
+
+        <!-- 结果展示部分保持不变 -->
+
+        <div id="loading" class="loading">正在分析中，请稍候...</div>
+    </div>
+
+    <script>
+        async function startAnalysis() {
+            const input = document.getElementById('newsContent').value.trim();
+            if (!input) return alert('请输入新闻内容或链接');
+
+            // 链接验证
+            const isURL = isValidUrl(input);
+            if (isURL && !input.startsWith('http')) {
+                document.getElementById('urlWarning').style.display = 'block';
+                document.getElementById('urlWarning').textContent = '链接需要包含http://或https://前缀';
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        content: input.substring(0, 3000),
+                        isURL: isURL
+                    })
+                });
+                
+                if (!response.ok) throw new Error(await response.text());
+                const result = await response.json();
+                
+                updateResults(result);
+                document.getElementById('resultPanel').style.display = 'block';
+            } catch (error) {
+                alert(`分析失败: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // 其余JavaScript函数保持不变
+    </script>
+</body>
+</html>
