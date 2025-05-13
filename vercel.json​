@@ -1,0 +1,9 @@
+{
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/analyze" }],
+  "functions": {
+    "api/analyze.js": {
+      "includeFiles": "public/**",
+      "maxDuration": 20
+    }
+  }
+}
